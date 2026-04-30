@@ -204,5 +204,5 @@ log "Done!"
 echo
 echo "    Results file:  $FINAL_RESULTS"
 echo
-echo "    Please email this file to: travis@gethero.com"
+echo "    Please send this file back."
 echo

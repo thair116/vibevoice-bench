@@ -29,28 +29,7 @@ That's it. The script will:
 5. Run the benchmark.
 6. Save a results file like `results_<your-mac-name>_<timestamp>.json`.
 
-When it's done, **email the `results_*.json` file to travis@gethero.com**. That's all I need.
-
-## What if something goes wrong?
-
-**"command not found: python3"**
-You don't have Python installed. Install it from [python.org/downloads](https://www.python.org/downloads/) and try again.
-
-**"Port 6969 is already in use"**
-Something else on your Mac is using port 6969. Either close that program, or run with a different port:
-```bash
-PORT=7070 ./run.sh
-```
-
-**Stuck on "Waiting for server to become healthy" for a long time**
-On the first run, the model download can take 10–15 minutes (longer on slow connections). If it's been more than 20 minutes, open another Terminal window and check progress:
-```bash
-tail -f ~/Code/vibevoice-mac-bench/server.log
-```
-You should see HuggingFace download lines. If it's truly stuck, Ctrl-C and try again.
-
-**Anything else**
-Send me whatever error you see along with `server.log` and I'll figure it out: travis@gethero.com.
+When it's done, send the `results_*.json` file back. That's all I need.
 
 ## What the script actually does (for the curious)
 
