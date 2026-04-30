@@ -1,0 +1,23 @@
+# Python venv
+.venv/
+
+# Downloaded model weights (~10 GB)
+model/
+
+# Server runtime logs
+server.log
+*.log
+
+# Benchmark output
+results_*.json
+.raw_results_*.json
+
+# macOS noise
+.DS_Store
+
+# Editor noise
+.idea/
+.vscode/
+*.swp
+__pycache__/
+*.pyc
