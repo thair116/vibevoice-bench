@@ -16,7 +16,7 @@
 #
 # Optional environment overrides:
 #   MAX_BATCH_SIZE=8 ./run.sh    # if you have a lot of RAM (default: 4)
-#   PORT=9000 ./run.sh           # if 8888 is already in use (default: 8888)
+#   PORT=7070 ./run.sh           # if 6969 is already in use (default: 6969)
 #
 
 set -euo pipefail
@@ -24,7 +24,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-PORT="${PORT:-8888}"
+PORT="${PORT:-6969}"
 MAX_BATCH_SIZE="${MAX_BATCH_SIZE:-4}"
 SERVER_URL="http://localhost:${PORT}"
 SERVER_LOG="${SCRIPT_DIR}/server.log"
@@ -71,7 +71,7 @@ if (( DISK_AVAIL_GB < 15 )); then
 fi
 
 if lsof -i ":${PORT}" -sTCP:LISTEN >/dev/null 2>&1; then
-    fail "Port ${PORT} is already in use. Close whatever's using it, or run: PORT=9000 ./run.sh"
+    fail "Port ${PORT} is already in use. Close whatever's using it, or run: PORT=7070 ./run.sh"
 fi
 
 CHIP=$(sysctl -n machdep.cpu.brand_string)

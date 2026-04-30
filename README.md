@@ -36,10 +36,10 @@ When it's done, **email the `results_*.json` file to travis@gethero.com**. That'
 **"command not found: python3"**
 You don't have Python installed. Install it from [python.org/downloads](https://www.python.org/downloads/) and try again.
 
-**"Port 8888 is already in use"**
-Something else on your Mac is using port 8888. Either close that program, or run with a different port:
+**"Port 6969 is already in use"**
+Something else on your Mac is using port 6969. Either close that program, or run with a different port:
 ```bash
-PORT=9000 ./run.sh
+PORT=7070 ./run.sh
 ```
 
 **Stuck on "Waiting for server to become healthy" for a long time**
