@@ -107,6 +107,8 @@ export VIBEVOICE_MODEL_PATH="rsxdalv/VibeVoice-Large"
 export VIBEVOICE_MODEL_LOCAL_PATH="${SCRIPT_DIR}/model"
 export PORT
 export MAX_BATCH_SIZE
+# Short batch-fill window so single-request runs don't wait 10s before processing.
+export BATCH_TIMEOUT_SECONDS="${BATCH_TIMEOUT_SECONDS:-1.0}"
 export PYTHONUNBUFFERED=1
 export PYTORCH_ENABLE_MPS_FALLBACK=1
 
@@ -158,6 +160,11 @@ RAW_RESULTS="${SCRIPT_DIR}/.raw_results_${TIMESTAMP}.json"
 FINAL_RESULTS="${SCRIPT_DIR}/results_${HOSTNAME_SHORT}_${TIMESTAMP}.json"
 
 log "Running benchmark (≈60 seconds of audio, batch sizes 1, 2, 4, 3 runs each)..."
+echo "    Heads up: the first request takes ~1–2 minutes for MPS to warm up."
+echo "    Subsequent requests are much faster. To watch progress in another"
+echo "    terminal: tail -f $SERVER_LOG"
+echo
+
 python3 "${SCRIPT_DIR}/benchmark/benchmark.py" \
     --server "$SERVER_URL" \
     --batch-sizes 1,2,4 \

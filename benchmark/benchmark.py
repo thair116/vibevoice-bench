@@ -95,6 +95,21 @@ async def monitor_gpu_during_request(
         await asyncio.sleep(0.5)  # Sample every 500ms
 
 
+async def heartbeat_during_request(stop_event: asyncio.Event, interval: int = 10):
+    """Print elapsed-time dots so the user knows we're still alive."""
+    elapsed = 0
+    try:
+        while not stop_event.is_set():
+            try:
+                await asyncio.wait_for(stop_event.wait(), timeout=interval)
+                return
+            except asyncio.TimeoutError:
+                elapsed += interval
+                print(f" [{elapsed}s]", end="", flush=True)
+    except asyncio.CancelledError:
+        return
+
+
 async def send_dialogue_request(
     session: aiohttp.ClientSession, url: str, dialogue: dict
 ) -> RequestResult:
@@ -162,10 +177,11 @@ async def run_batch(
     run_number: int,
 ) -> BatchResult:
     """Run a batch of concurrent requests and collect metrics."""
-    # Start GPU monitoring
+    # Start GPU monitoring + heartbeat
     gpu_samples: list[GPUMetrics] = []
     stop_event = asyncio.Event()
     monitor_task = asyncio.create_task(monitor_gpu_during_request(stop_event, gpu_samples))
+    heartbeat_task = asyncio.create_task(heartbeat_during_request(stop_event))
 
     # Send concurrent requests
     start_time = time.time()
@@ -173,9 +189,10 @@ async def run_batch(
     results = await asyncio.gather(*tasks)
     end_time = time.time()
 
-    # Stop GPU monitoring
+    # Stop monitors
     stop_event.set()
     await monitor_task
+    await heartbeat_task
 
     wall_time = end_time - start_time
 
