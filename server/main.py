@@ -147,6 +147,28 @@ def _to_mono_24k(waveform: torch.Tensor, sample_rate: int) -> torch.Tensor:
     return waveform.cpu()
 
 
+def _load_wav_robust(wav_file: Path) -> tuple[torch.Tensor, int]:
+    """Load a WAV file, falling back to soundfile if torchaudio's backend fails.
+
+    Some macOS environments end up with a torchaudio that can't decode WAVs
+    without ffmpeg/sox installed. soundfile bundles its own libsndfile and
+    works everywhere, so we try torchaudio first and fall back on any error.
+    """
+    try:
+        waveform, sample_rate = torchaudio.load(wav_file)
+        return waveform, sample_rate
+    except Exception as ta_err:
+        logger.warning(
+            "torchaudio.load failed for %s (%s); falling back to soundfile",
+            wav_file.name, ta_err,
+        )
+        import soundfile as sf
+        data, sample_rate = sf.read(str(wav_file), dtype="float32", always_2d=True)
+        # sf gives (frames, channels); torchaudio expects (channels, frames)
+        waveform = torch.from_numpy(data.T).contiguous()
+        return waveform, sample_rate
+
+
 def load_voice_samples() -> None:
     """Load voice sample files from voices directory."""
     global voice_samples
@@ -154,12 +176,19 @@ def load_voice_samples() -> None:
 
     if not VOICES_DIR.exists():
         logger.warning("Voices directory does not exist: %s", VOICES_DIR)
+        print(f"[voices] ERROR: voices directory does not exist: {VOICES_DIR}", flush=True)
         return
 
-    for wav_file in sorted(VOICES_DIR.glob("*.wav")):
+    wav_files = sorted(VOICES_DIR.glob("*.wav"))
+    if not wav_files:
+        logger.warning("No .wav files found in voices directory: %s", VOICES_DIR)
+        print(f"[voices] ERROR: no .wav files found in {VOICES_DIR}", flush=True)
+        return
+
+    for wav_file in wav_files:
         voice_name = wav_file.stem
         try:
-            waveform, sample_rate = torchaudio.load(wav_file)
+            waveform, sample_rate = _load_wav_robust(wav_file)
             waveform = _to_mono_24k(waveform, sample_rate)
             voice_samples[voice_name] = waveform
             logger.info(
@@ -169,8 +198,10 @@ def load_voice_samples() -> None:
             )
         except Exception as e:
             logger.exception("Failed to load voice sample %s: %s", wav_file, e)
+            print(f"[voices] FAILED to load {wav_file.name}: {e}", flush=True)
 
     logger.info("Loaded %d total voice samples", len(voice_samples))
+    print(f"[voices] Loaded {len(voice_samples)} of {len(wav_files)} voices", flush=True)
 
 
 def load_model() -> None:

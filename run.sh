@@ -154,6 +154,34 @@ fi
 
 log "Server is ready."
 
+# Verify voice samples were loaded — this catches torchaudio backend issues
+# that would otherwise only surface as opaque HTTP 503s during the benchmark.
+VOICES_JSON="$(curl -sf --max-time 10 "${SERVER_URL}/voices" || true)"
+VOICE_COUNT=$(printf '%s' "$VOICES_JSON" | python3 -c '
+import json, sys
+raw = sys.stdin.read().strip()
+try:
+    d = json.loads(raw) if raw else None
+except json.JSONDecodeError:
+    d = None
+if isinstance(d, list):
+    print(len(d))
+elif isinstance(d, dict):
+    print(len(d.get("voices", [])))
+else:
+    print(0)
+' 2>/dev/null || echo 0)
+if (( VOICE_COUNT == 0 )); then
+    echo
+    echo "--- last 80 lines of server.log ---"
+    tail -n 80 "$SERVER_LOG" || true
+    echo
+    fail "Server is up but loaded 0 voice samples. Check the log above for
+       'Failed to load voice sample' errors. Most common cause is a
+       broken torchaudio backend — please report this with server.log."
+fi
+log "Loaded ${VOICE_COUNT} voice samples."
+
 # ---------- 5. run benchmark ----------
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 RAW_RESULTS="${SCRIPT_DIR}/.raw_results_${TIMESTAMP}.json"
